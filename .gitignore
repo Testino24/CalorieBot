@@ -1,0 +1,11 @@
+bot_database.db
+initial_products.json
+bot_ requirements.md
+credentials.json
+.env
+__pycache__/
+.venv/
+.agent/
+my products.md
+my products.pdf
+doc_dump.json

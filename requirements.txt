@@ -1,0 +1,6 @@
+aiogram>=3.0.0
+aiosqlite
+python-dotenv
+google-genai
+apscheduler
+groq
