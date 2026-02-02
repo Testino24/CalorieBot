@@ -50,17 +50,27 @@ async def sync_to_google_doc_job():
             users = await cursor.fetchall()
             print(f"DEBUG: Found {len(users)} users for sync: {users}")
 
+    # Job runs for TODAY for all users
     today = datetime.now(USER_TZ).date()
     
     for (user_id,) in users:
-        logs = await repository.get_daily_logs(user_id, today)
-        if logs:
-            report_text = await report.generate_day_report(logs)
-            success = await google_sync.append_to_doc(doc_id, report_text)
-            if success:
-                print(f"Daily sync successful for user {user_id}")
-            else:
-                print(f"Daily sync failed for user {user_id}")
+        await sync_user_day(user_id, today, doc_id)
+
+async def sync_user_day(user_id, date, doc_id):
+    """Синхронизирует данные конкретного пользователя за конкретную дату."""
+    logs = await repository.get_daily_logs(user_id, date)
+    if logs:
+        report_text = await report.generate_day_report(logs)
+        success = await google_sync.append_to_doc(doc_id, report_text)
+        if success:
+            print(f"Sync successful for user {user_id} date {date}")
+            return True
+        else:
+            print(f"Sync failed for user {user_id} date {date}")
+            return False
+    else:
+        print(f"No logs for {date} to sync.")
+        return False
 
 def start_scheduler():
     scheduler.add_job(verify_calories_job, 'interval', weeks=1)

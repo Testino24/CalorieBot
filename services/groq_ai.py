@@ -27,7 +27,8 @@ Rules:
    - If the input is "Product X ккал" OR "Product Yг - X ккал", set `manual_kcal` = X and `kcal_type`: "total".
    - If weight is not specified but there is "(X)", set weight=100.
 6. TIME and DATE extraction:
-   - Extract date in 'YYYY-MM-DD' format if mentioned (e.g. "1/22/26" -> "2026-01-22"). 
+   - Extract date in 'YYYY-MM-DD' format if mentioned (e.g. "1/22/26" or "23/01/26" -> "2026-01-23"). 
+   - IMPORTANT: If a date appears, it applies to ALL following items until a new date is found.
    - Extract time in 'HH:MM' format if mentioned (e.g. "03:05").
    - Associate items with the most recent time/date mentioned above them. If none mentioned, use null.
 7. Return ONLY this JSON format:
@@ -50,7 +51,7 @@ Output: [
                 {"role": "user", "content": prompt}
             ],
             temperature=0,
-            max_tokens=1000
+            max_tokens=4000
         )
         
         # Получаем ответ

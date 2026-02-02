@@ -200,3 +200,22 @@ async def delete_log_entry(log_id):
     async with aiosqlite.connect(DB_PATH) as db:
         await db.execute("DELETE FROM daily_logs WHERE id = ?", (log_id,))
         await db.commit()
+
+async def get_last_log_date(user_id):
+    """Возвращает дату последней добавленной записи (по ID, а не по времени)."""
+    async with aiosqlite.connect(DB_PATH) as db:
+        async with db.execute("SELECT timestamp FROM daily_logs WHERE user_id = ? ORDER BY id DESC LIMIT 1", (user_id,)) as cursor:
+            row = await cursor.fetchone()
+            if row:
+                # row[0] might be string or datetime object depending on how it was saved
+                # In this project we save as datetime object but aiosqlite might return string
+                ts = row[0]
+                if isinstance(ts, str):
+                   # Handle standard ISO format 'YYYY-MM-DD HH:MM:SS...'
+                   try:
+                       return datetime.datetime.strptime(ts[:10], "%Y-%m-%d").date()
+                   except:
+                       return None
+                elif isinstance(ts, datetime.datetime):
+                    return ts.date()
+            return None

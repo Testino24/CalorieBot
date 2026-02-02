@@ -159,10 +159,52 @@ async def cmd_clear(message: types.Message):
     await message.answer("🧹 Все записи за сегодня удалены из дневника.")
 @router.message(Command("sync"))
 async def cmd_sync(message: types.Message):
-    from utils.scheduler import sync_to_google_doc_job
-    await message.answer("🔄 Запущена синхронизация с Google Docs...")
+    from utils.scheduler import sync_user_day
+    from config import USER_TZ
+    from datetime import datetime
+    import os
+    
+    doc_id = os.getenv("GOOGLE_DOC_ID")
+    if not doc_id:
+        await message.answer("❌ GOOGLE_DOC_ID не настроен.")
+        return
+
+    # 1. Check for explicit date argument /sync DD.MM.YY
+    args = message.text.replace("/sync", "").strip()
+    target_date = None
+    
+    if args:
+        try:
+            # Try parsing various formats
+            for fmt in ["%d.%m.%y", "%d/%m/%y", "%Y-%m-%d", "%d.%m.%Y"]:
+                try:
+                    target_date = datetime.strptime(args, fmt).date()
+                    break
+                except ValueError:
+                    continue
+            if not target_date:
+                raise ValueError("Format unknown")
+        except:
+             await message.answer("⚠️ Неверный формат даты. Используйте: /sync 25.01.26")
+             return
+    else:
+        # 2. Check last added log date
+        user_id = message.from_user.id
+        last_log_date = await repository.get_last_log_date(user_id)
+        
+        # If user has logs, use last log date. If no logs, default to today.
+        if last_log_date:
+            target_date = last_log_date
+        else:
+            target_date = datetime.now(USER_TZ).date()
+
+    await message.answer(f"🔄 Синхронизирую данные за {target_date.strftime('%d.%m.%y')}...")
+    
     try:
-        await sync_to_google_doc_job()
-        await message.answer("✅ Данные за сегодня успешно добавлены в Google Документ!")
+        success = await sync_user_day(message.from_user.id, target_date, doc_id)
+        if success:
+            await message.answer(f"✅ Данные за {target_date.strftime('%d.%m.%y')} успешно добавлены!")
+        else:
+            await message.answer(f"⚠️ Нет данных для синхронизации за {target_date.strftime('%d.%m.%y')} или произошла ошибка.")
     except Exception as e:
-        await message.answer(f"❌ Ошибка синхронизации: {e}")
+        await message.answer(f"❌ Ошибка: {e}")
