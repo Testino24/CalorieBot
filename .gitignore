@@ -9,3 +9,7 @@ __pycache__/
 my products.md
 my products.pdf
 doc_dump.json
+# Docker
+.docker
+*.log
+docker-compose.override.yml

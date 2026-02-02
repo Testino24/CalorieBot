@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  bot:
+    build: .
+    container_name: calorie_bot
+    restart: always
+    volumes:
+      - ./bot_database.db:/app/bot_database.db
+      - ./initial_products.json:/app/initial_products.json
+      - ./credentials.json:/app/credentials.json
+    env_file:
+      - .env
+    environment:
+      - TZ=Asia/Yekaterinburg
