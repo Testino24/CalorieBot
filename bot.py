@@ -6,8 +6,21 @@ from config import BOT_TOKEN
 from handlers import common, food_log, edit_log
 from database import db
 from utils import scheduler
-
+from aiohttp import web
 import os
+
+async def health_check(request):
+    return web.Response(text="OK", status=200)
+
+async def start_health_check_server():
+    app = web.Application()
+    app.router.add_get('/', health_check)
+    runner = web.AppRunner(app)
+    await runner.setup()
+    port = int(os.environ.get("PORT", 8000))
+    site = web.TCPSite(runner, '0.0.0.0', port)
+    await site.start()
+    print(f"Health check server started on port {port}")
 
 async def main():
     # SETUP FOR CLOUD DEPLOYMENT (Koyeb)
@@ -41,6 +54,9 @@ async def main():
     scheduler.start_scheduler()
     
     print("Bot started...")
+    # Start Health Check Server (Koyeb requirement)
+    await asyncio.create_task(start_health_check_server())
+    
     try:
         await dp.start_polling(bot)
     finally:
