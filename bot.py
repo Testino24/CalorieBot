@@ -7,7 +7,21 @@ from handlers import common, food_log, edit_log
 from database import db
 from utils import scheduler
 
+import os
+
 async def main():
+    # SETUP FOR CLOUD DEPLOYMENT (Koyeb)
+    # Restore files from environment variables
+    if os.getenv("GOOGLE_CREDENTIALS_JSON") and not os.path.exists("credentials.json"):
+        with open("credentials.json", "w", encoding="utf-8") as f:
+            f.write(os.getenv("GOOGLE_CREDENTIALS_JSON"))
+        print("Restored credentials.json from ENV")
+        
+    if os.getenv("INITIAL_PRODUCTS_JSON") and not os.path.exists("initial_products.json"):
+        with open("initial_products.json", "w", encoding="utf-8") as f:
+            f.write(os.getenv("INITIAL_PRODUCTS_JSON"))
+        print("Restored initial_products.json from ENV")
+
     # Logging
     logging.basicConfig(level=logging.INFO, stream=sys.stdout)
     
