@@ -14,7 +14,7 @@ async def health_check(request):
 
 async def start_health_check_server():
     app = web.Application()
-    app.router.add_get('/', health_check)
+    app.router.add_get('/healthz', health_check)
     runner = web.AppRunner(app)
     await runner.setup()
     port = int(os.environ.get("PORT", 8000))
